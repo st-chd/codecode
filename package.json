@@ -1,0 +1,20 @@
+{
+  "name": "extension-codemirror",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@codemirror/lang-css": "^6.3.0",
+    "@codemirror/lang-markdown": "^6.3.0",
+    "codemirror": "^6.0.1",
+    "css-loader": "^7.1.2",
+    "style-loader": "^4.0.0"
+  },
+  "scripts": {
+    "build": "webpack --mode production",
+    "test": "node --test tests/mobile-search.test.mjs tests/deferred-setup.test.mjs"
+  },
+  "devDependencies": {
+    "terser-webpack-plugin": "^5.3.10",
+    "webpack-cli": "^5.1.4"
+  }
+}

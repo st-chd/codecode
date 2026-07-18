@@ -1,0 +1,12 @@
+{
+    "display_name": "CodeMirror",
+    "loading_order": 999,
+    "requires": [],
+    "optional": [],
+    "js": "dist/index.js",
+    "css": "",
+    "author": "CH",
+    "version": "1.0.0",
+    "homePage": "https://github.com/st-chd/codecode",
+    "auto_update": false
+}
