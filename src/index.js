@@ -1,5 +1,5 @@
 import { EditorView } from 'codemirror';
-import { highlightActiveLineGutter, highlightSpecialChars, drawSelection, dropCursor, highlightActiveLine, keymap } from '@codemirror/view';
+import { highlightActiveLineGutter, highlightSpecialChars, dropCursor, highlightActiveLine, keymap } from '@codemirror/view';
 export { EditorView } from '@codemirror/view';
 import { Compartment, EditorState } from '@codemirror/state';
 import { indentOnInput, syntaxHighlighting, defaultHighlightStyle, bracketMatching } from '@codemirror/language';
@@ -129,9 +129,7 @@ function setupCodeMirror(target) {
             highlightActiveLineGutter(),
             highlightSpecialChars(),
             history(),
-            drawSelection(),
             dropCursor(),
-            EditorState.allowMultipleSelections.of(true),
             EditorState.phrases.of(searchPhrases),
             indentOnInput(),
             syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
