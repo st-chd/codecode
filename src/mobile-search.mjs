@@ -11,6 +11,7 @@
  */
 const ownedButtonActions = new WeakMap();
 const searchOpenedHandlers = new WeakMap();
+const themeToggleActions = new WeakMap();
 
 export function createMobileSearchButton({ container, editor, openSearchPanel, onSearchOpened, label, mobile }) {
     if (!mobile) {
@@ -43,6 +44,42 @@ export function createMobileSearchButton({ container, editor, openSearchPanel, o
     container.appendChild(searchButton);
 
     return searchButton;
+}
+
+export function createThemeToggleButton({ container, onThemeChange }) {
+    const existingButton = container.querySelector('.cm-theme-toggle-button');
+    if (existingButton) {
+        const action = themeToggleActions.get(existingButton);
+        if (action) {
+            action.onThemeChange = onThemeChange;
+        }
+        return existingButton;
+    }
+
+    const themeButton = container.ownerDocument.createElement('button');
+    themeButton.classList.add('cm-theme-toggle-button', 'menu_button');
+    const action = { dark: false, onThemeChange };
+    themeToggleActions.set(themeButton, action);
+    updateThemeToggleButton(themeButton, action.dark);
+    themeButton.addEventListener('click', (event) => {
+        event.preventDefault();
+        const currentAction = themeToggleActions.get(themeButton);
+        currentAction.dark = !currentAction.dark;
+        updateThemeToggleButton(themeButton, currentAction.dark);
+        currentAction.onThemeChange(currentAction.dark);
+    });
+    container.appendChild(themeButton);
+
+    return themeButton;
+}
+
+function updateThemeToggleButton(button, dark) {
+    const label = dark ? '☀️' : '🌙';
+    const themeName = dark ? '라이트' : '다크';
+    button.type = 'button';
+    button.textContent = label;
+    button.title = `${themeName} 테마로 전환`;
+    button.setAttribute('aria-label', `${themeName} 테마로 전환`);
 }
 
 function configureSearchButton(button, label) {

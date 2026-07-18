@@ -5,17 +5,11 @@ dialog.popup:has(.codemirror-host) {
 dialog.popup .codemirror-host {
     position: relative;
     text-align: initial;
-    color: var(--SmartThemeBodyColor);
-    background-color: var(--black30a);
     border: 1px solid var(--SmartThemeBorderColor);
     border-radius: 5px;
     overflow: hidden;
     height: 100%;
     width: 100%;
-}
-
-.codemirror-host .cm-editor .cm-activeLine {
-    background-color: rgba(200, 200, 200, 0.05);
 }
 
 .codemirror-host .cm-editor {
@@ -26,30 +20,15 @@ dialog.popup .codemirror-host {
     font-family: var(--monoFontFamily);
 }
 
-.codemirror-host .cm-editor.cm-focused  .cm-selectionLayer .cm-selectionBackground,
-.codemirror-host .cm-editor .cm-selectionBackground  {
-    background: rgba(200, 200, 200, 0.15);
-}
-
-.codemirror-host .cm-editor .cm-cursor {
-    border-left-color: var(--SmartThemeBodyColor);
-}
-
 .codemirror-host .cm-editor input[type="checkbox"] {
     display: inline-flex;
 }
 
 .codemirror-host .cm-editor .cm-panels {
-    background-color: var(--SmartThemeBlurTintColor);
-    color: var(--SmartThemeBodyColor);
-    border: 1px solid var(--SmartThemeBorderColor);
     border-radius: 5px;
 }
 
 .codemirror-host .cm-editor .cm-textfield {
-    background-color: var(--black30a);
-    color: var(--SmartThemeBodyColor);
-    border: 1px solid var(--SmartThemeBorderColor);
     border-radius: 5px;
     font-family: var(--mainFontFamily);
     padding: 3px 5px;
@@ -58,9 +37,6 @@ dialog.popup .codemirror-host {
 }
 
 .codemirror-host .cm-editor .cm-button {
-    color: var(--SmartThemeBodyColor);
-    background-color: var(--SmartThemeBlurTintColor);
-    border: 1px solid var(--SmartThemeBorderColor);
     cursor: pointer;
     transition: background-color 0.2s, box-shadow 0.2s, transform 0.2s;
     display: inline-flex;
@@ -81,6 +57,13 @@ dialog.popup:has(.codemirror-host.has-mobile-search-button) .popup-controls {
     justify-content: center;
 }
 
+dialog.popup:has(.codemirror-host.has-theme-toggle-button) .popup-controls {
+    position: relative;
+    align-self: stretch;
+    width: 100%;
+    justify-content: center;
+}
+
 dialog.popup .popup-controls > .cm-search-button {
     position: absolute;
     top: 50%;
@@ -88,6 +71,7 @@ dialog.popup .popup-controls > .cm-search-button {
     transform: translateY(-50%);
     height: auto;
     min-height: 0;
+    min-width: 44px;
     margin: 0;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
@@ -95,6 +79,36 @@ dialog.popup .popup-controls > .cm-search-button {
 
 dialog.popup .popup-controls > .cm-search-button:hover {
     background-color: var(--SmartThemeBorderColor);
+}
+
+dialog.popup .popup-controls > .cm-theme-toggle-button {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    height: auto;
+    min-height: 0;
+    width: 44px;
+    margin: 0;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+dialog.popup .popup-controls:has(.cm-search-button) > .cm-theme-toggle-button {
+    right: 52px;
+}
+
+dialog.popup .popup-controls > .cm-theme-toggle-button:hover {
+    background-color: var(--SmartThemeBorderColor);
+}
+
+dialog.popup .popup-controls > .cm-theme-toggle-button:active {
+    transform: translateY(-50%) scale(0.96);
+}
+
+dialog.popup .popup-controls > .cm-theme-toggle-button:focus-visible {
+    outline: 2px solid var(--SmartThemeQuoteColor);
+    outline-offset: 2px;
 }
 
 dialog.popup .popup-controls > .cm-search-button:active {
@@ -147,16 +161,11 @@ dialog.popup:has(.cm-panel.cm-search) .popup-controls > .cm-search-button {
     justify-content: center;
     width: 44px;
     height: 44px;
-    color: var(--SmartThemeBodyColor);
     border-radius: 5px;
     cursor: pointer;
     font-size: 1.4rem;
     line-height: 1;
     touch-action: manipulation;
-}
-
-.codemirror-host.has-mobile-search-button .cm-editor .cm-panel.cm-search > button[name="close"]:hover {
-    background-color: var(--SmartThemeBorderColor);
 }
 
 .codemirror-host.has-mobile-search-button .cm-editor .cm-panel.cm-search > button[name="close"]:focus-visible {

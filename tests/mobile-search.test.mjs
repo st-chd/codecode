@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { createMobileSearchButton } from '../src/mobile-search.mjs';
+import { createMobileSearchButton, createThemeToggleButton } from '../src/mobile-search.mjs';
 
 class FakeClassList {
     #classes = new Set();
@@ -52,11 +52,11 @@ class FakeElement {
     }
 
     querySelector(selector) {
-        if (selector !== '.cm-search-button') {
+        if (!['.cm-search-button', '.cm-theme-toggle-button'].includes(selector)) {
             throw new Error(`Unsupported selector in test: ${selector}`);
         }
 
-        return this.children.find((child) => child.classList.contains('cm-search-button')) ?? null;
+        return this.children.find((child) => child.classList.contains(selector.slice(1))) ?? null;
     }
 
     click() {
@@ -151,6 +151,26 @@ test('desktop user does not get a floating search button', () => {
 
     assert.equal(button, null);
     assert.equal(host.children.length, 0);
+});
+
+test('user can toggle between light and dark editor themes', () => {
+    const host = createHost();
+    const changes = [];
+    const button = createThemeToggleButton({
+        container: host,
+        onThemeChange: (dark) => changes.push(dark),
+    });
+
+    assert.equal(button.textContent, '🌙');
+    assert.equal(button.getAttribute('aria-label'), '다크 테마로 전환');
+
+    button.click();
+    assert.equal(button.textContent, '☀️');
+    assert.deepEqual(changes, [true]);
+
+    button.click();
+    assert.equal(button.textContent, '🌙');
+    assert.deepEqual(changes, [true, false]);
 });
 
 test('a reused extension button runs the latest editor and search command', () => {

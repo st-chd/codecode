@@ -1,18 +1,45 @@
 import { EditorView } from 'codemirror';
 import { highlightActiveLineGutter, highlightSpecialChars, drawSelection, dropCursor, highlightActiveLine, keymap } from '@codemirror/view';
 export { EditorView } from '@codemirror/view';
-import { EditorState } from '@codemirror/state';
+import { Compartment, EditorState } from '@codemirror/state';
 import { indentOnInput, syntaxHighlighting, defaultHighlightStyle, bracketMatching } from '@codemirror/language';
 import { history, defaultKeymap, historyKeymap, insertTab } from '@codemirror/commands';
 import { highlightSelectionMatches, searchKeymap, openSearchPanel } from '@codemirror/search';
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { css } from '@codemirror/lang-css';
-import { createMobileSearchButton } from './mobile-search.mjs';
+import { oneDark } from '@codemirror/theme-one-dark';
+import { createMobileSearchButton, createThemeToggleButton } from './mobile-search.mjs';
 import { hideTargetUntilDialogCloses, scheduleEditorSetup } from './deferred-setup.mjs';
 import './style.css';
 
 const { isMobile } = SillyTavern.getContext();
 const pendingTargets = new WeakSet();
+const lightTheme = EditorView.theme({
+    '&': {
+        color: '#24292f',
+        backgroundColor: '#ffffff',
+    },
+    '.cm-content': { caretColor: '#24292f' },
+    '.cm-cursor, .cm-dropCursor': { borderLeftColor: '#24292f' },
+    '&.cm-focused .cm-selectionBackground, ::selection': { backgroundColor: '#b6d7ff' },
+    '.cm-gutters': {
+        color: '#57606a',
+        backgroundColor: '#f6f8fa',
+        borderRight: '1px solid #d0d7de',
+    },
+    '.cm-activeLine': { backgroundColor: '#f6f8fa' },
+    '.cm-activeLineGutter': { backgroundColor: '#eaeef2' },
+    '.cm-panels': {
+        color: '#24292f',
+        backgroundColor: '#ffffff',
+        borderTop: '1px solid #d0d7de',
+    },
+    '.cm-textfield': {
+        color: '#24292f',
+        backgroundColor: '#ffffff',
+        border: '1px solid #d0d7de',
+    },
+}, { dark: false });
 const searchLabels = {
     find: '찾기',
     replace: '바꾸기',
@@ -94,9 +121,11 @@ function setupCodeMirror(target) {
     target.classList.add('displayNone');
     parent.appendChild(host);
     const isCss = target.dataset.for === 'customCSS';
+    const themeCompartment = new Compartment();
     const editor = new EditorView({
         doc: target.value,
         extensions: [
+            themeCompartment.of(lightTheme),
             highlightActiveLineGutter(),
             highlightSpecialChars(),
             history(),
@@ -138,6 +167,7 @@ function setupCodeMirror(target) {
     editor.focus();
 
     addMobileSearchButton(host, editor);
+    addThemeToggleButton(host, editor, themeCompartment);
 
     const dialog = target.closest('dialog');
     dialog?.addEventListener('close', () => {
@@ -195,6 +225,27 @@ function addMobileSearchButton(host, editor, searchCommand = openSearchPanel) {
 
     if (searchButton) {
         host.classList.add('has-mobile-search-button');
+    }
+}
+
+function addThemeToggleButton(host, editor, themeCompartment) {
+    const dialog = host.closest('dialog');
+    const buttonContainer = dialog?.querySelector('.popup-controls') ?? host;
+    const existingButton = dialog?.querySelector('.cm-theme-toggle-button')
+        ?? host.querySelector('.cm-theme-toggle-button');
+    if (existingButton && existingButton.parentElement !== buttonContainer) {
+        buttonContainer.appendChild(existingButton);
+    }
+
+    const themeButton = createThemeToggleButton({
+        container: buttonContainer,
+        onThemeChange: (dark) => editor.dispatch({
+            effects: themeCompartment.reconfigure(dark ? oneDark : lightTheme),
+        }),
+    });
+
+    if (themeButton) {
+        host.classList.add('has-theme-toggle-button');
     }
 }
 
