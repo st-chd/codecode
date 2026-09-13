@@ -1,4 +1,4 @@
-export const defaultSettings = { theme: 'neo', lineNumbers: false };
+const defaultSettings = { theme: 'neo', lineNumbers: false };
 
 export function normalizeSettings(value, themes) {
     const settings = value && typeof value === 'object' ? value : {};

@@ -1,7 +1,4 @@
-/**
- * Defer editor setup until other dialog observers have run. This lets the
- * extension reuse a compatible CodeMirror host instead of creating a duplicate.
- */
+// 다른 옵저버가 처리한 뒤 기존 CodeMirror 호스트를 재사용한다.
 export function scheduleEditorSetup({
     target,
     setup,
@@ -21,12 +18,7 @@ export function scheduleEditorSetup({
     return true;
 }
 
-/**
- * Hide a textarea while a compatible editor is active and always restore it
- * when the owning dialog closes.
- * @param {HTMLTextAreaElement} target
- * @param {HTMLDialogElement|null} dialog
- */
+// 호환 편집기 사용 중 textarea를 숨기고 대화상자 종료 시 복원한다.
 export function hideTargetUntilDialogCloses(target, dialog) {
     target.classList.add('displayNone');
     dialog?.addEventListener('close', () => {

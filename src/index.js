@@ -84,10 +84,6 @@ observer.observe(document.body, {
     childList: true,
 });
 
-/**
- * Setup CodeMirror for the target textarea element.
- * @param {HTMLTextAreaElement} target
- */
 function setupCodeMirror(target) {
     const parent = target.parentElement;
     if (!parent) {
@@ -202,7 +198,7 @@ function setupCodeMirror(target) {
             updateLanguage();
         },
         onSelectAll: () => { selectAll(editor); editor.focus(); },
-        onCopy: () => copyTextToClipboard(host.ownerDocument, editor.state.doc.toString()),
+        onCopy: () => copyTextToClipboard(host.ownerDocument, editor.state.doc.toString(), host.closest('dialog')),
     });
 
     const dialog = target.closest('dialog');
@@ -286,7 +282,7 @@ function localizeSearchPanel(host) {
     compactSearchPanel(panel);
 }
 
-async function copyTextToClipboard(doc, text) {
+async function copyTextToClipboard(doc, text, container) {
     if (doc.defaultView.navigator.clipboard?.writeText) {
         try {
             await doc.defaultView.navigator.clipboard.writeText(text);
@@ -298,11 +294,13 @@ async function copyTextToClipboard(doc, text) {
 
     const textarea = doc.createElement('textarea');
     textarea.value = text;
-    textarea.style.cssText = 'position:fixed;opacity:0;';
-    doc.body.appendChild(textarea);
+    textarea.style.cssText = 'position:fixed;opacity:0;pointer-events:none;';
+    textarea.setAttribute('aria-hidden', 'true');
+    (container ?? doc.body).appendChild(textarea);
     textarea.select();
-    doc.execCommand('copy');
+    const copied = doc.execCommand('copy');
     textarea.remove();
+    return copied;
 }
 
 function setSearchInputText(panel, name, text) {

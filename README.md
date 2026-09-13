@@ -1,22 +1,24 @@
-[README(EN)](README-EN.md)
 # SillyTavern용 CodeMirror
 
 [SillyTavern의 확장 텍스트 편집기](https://github.com/SillyTavern/Extension-CodeMirror)를 개선한 포크입니다.
 
 ## 포크 수정 내역
 
-### 1.2.0 (2026-09-13)
+### 1.2.0 (2026-09-14)
 
-- 확장 편집기의 원래 입력창 정보와 내용을 기반으로 CSS, JavaScript, Java, Markdown을 자동 감지합니다. 설정에서 언어를 직접 선택하거나 일반 텍스트로 전환할 수 있습니다.
-- 기본 밝은색, One Dark, Dracula, Monokai, Solarized Light/Dark 테마를 제공합니다.
-- 하단 `설정`에서 줄 번호 표시와 글꼴 크기(10~32px)를 조절할 수 있습니다. 테마와 표시 설정은 다음 편집기와 새로고침 후에도 유지됩니다.
-- `전체 선택` 버튼을 추가했습니다. 검색창의 `전체`는 검색 결과만 선택합니다.
-- 검색창은 찾기 기능만 먼저 표시하며, `바꾸기`를 체크했을 때만 바꿀 문자열과 바꾸기 버튼을 표시합니다. 검색창을 닫았다 다시 열면 바꾸기는 숨겨집니다.
-- 모바일 검색창을 좁은 화면에 맞춰 정리했으며, 데스크톱에서는 Ctrl+F / Cmd+F로 같은 검색창을 열 수 있습니다.
+- CodeMirror 6 기반 편집기를 SillyTavern의 확장 텍스트 입력창에 맞게 개선했습니다.
+- 입력창의 메타데이터와 내용에 따라 CSS, JavaScript, Java, Markdown을 자동 감지합니다.
+- `일반 텍스트 모드`를 켜면 구문 강조 없이 SillyTavern 기본 글꼴로 표시합니다. 끄면 자동 감지로 돌아갑니다.
+- `neo`, `idea`, `solarized light`, `duotone-light`, `nord`, `ayu-mirage`, `material-darker` 테마를 제공합니다.
+- 설정 패널에서 `줄 번호 표시`, `전체 선택`, `복사`를 사용할 수 있습니다. 글꼴 크기는 SillyTavern의 `--mainFontSize`를 항상 따릅니다.
+- 검색 패널을 한국어로 현지화하고, 찾기·바꾸기 입력창 높이와 검색 버튼 글꼴을 메인 폰트 크기에 맞췄습니다. `바꾸기`를 켤 때만 바꾸기 입력과 버튼을 표시합니다.
+- 모바일 검색 버튼과 좁은 화면 레이아웃을 지원하며, 데스크톱에서는 `Ctrl`+`F`로 검색 패널을 열 수 있습니다.
+- 다른 CodeMirror 확장이 이미 편집기를 만든 경우 중복 생성하지 않고 호환 편집기의 검색 기능을 재사용합니다. 팝업을 닫으면 확장이 만든 편집기를 정리하고 원래 입력창을 복원합니다.
+- 테마와 줄 번호 표시 설정은 `extension_settings.codecode`에 저장되어 다음 편집기와 새로고침 후에도 유지됩니다.
 
-자동 감지는 추정이므로 혼합된 문서에서는 직접 언어를 지정하세요. 수동 언어 선택은 현재 편집기에만 적용됩니다. 다른 CodeMirror 확장이 먼저 편집기를 생성하면 기존 호환 동작에 따라 검색 버튼만 추가합니다.
+자동 감지는 문서의 메타데이터와 앞부분을 기준으로 추정합니다. 구문 강조가 필요하지 않으면 `일반 텍스트 모드`를 사용하세요. 글꼴 크기 조절 항목은 없으며 SillyTavern의 메인 폰트 크기를 따릅니다.
 
-Dracula, Monokai, Solarized는 [CodeMirror 5 테마](https://codemirror.net/5/demo/theme.html)의 팔레트를 CodeMirror 6에 맞춰 적용하고 일부 색상의 대비를 조절했습니다.
+테마 팔레트는 CodeMirror 6용으로 구성했으며 밝은 테마 4개와 어두운 테마 3개를 제공합니다.
 
 ### 이전 변경
 
@@ -31,7 +33,6 @@ Dracula, Monokai, Solarized는 [CodeMirror 5 테마](https://codemirror.net/5/de
 - 호환 가능한 편집기를 안전하게 재사용하고, 팝업을 닫으면 원래 입력창을 복원합니다.
 - 다른 확장이 소유한 검색 버튼의 동작을 변경하지 않도록 상태를 분리했습니다.
 - 팝업이 닫힐 때 확장이 생성한 편집기 인스턴스를 정리합니다.
-- 모바일 검색 기능과 지연된 편집기 초기화를 자동 테스트로 검증합니다.
 
 ## 사용 방법
 
@@ -54,12 +55,6 @@ https://github.com/st-chd/codecode
 5. 배포할 때 소스와 함께 `dist/index.js`, `manifest.json`, `package-lock.json` 변경사항도 포함하세요. `node_modules`는 배포하지 않습니다.
 
 표시 설정은 SillyTavern의 `extension_settings.codecode`에 저장합니다. 브라우저 저장소나 별도 파일은 생성하지 않습니다. 확장 정리·삭제 훅을 지원하는 SillyTavern에서는 정리 또는 삭제 시 이 설정을 제거합니다. 이전 버전에서 훅을 지원하지 않으면 작은 설정 항목이 남을 수 있습니다.
-
-## 테스트 방법
-
-```bash
-npm test
-```
 
 ## 출처 및 크레딧
 
