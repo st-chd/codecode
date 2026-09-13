@@ -1,45 +1,31 @@
 import { EditorView } from 'codemirror';
-import { highlightActiveLineGutter, highlightSpecialChars, dropCursor, highlightActiveLine, keymap } from '@codemirror/view';
+import { lineNumbers, highlightActiveLineGutter, highlightSpecialChars, dropCursor, highlightActiveLine, keymap } from '@codemirror/view';
 export { EditorView } from '@codemirror/view';
 import { Compartment, EditorState } from '@codemirror/state';
 import { indentOnInput, syntaxHighlighting, defaultHighlightStyle, bracketMatching } from '@codemirror/language';
-import { history, defaultKeymap, historyKeymap, insertTab } from '@codemirror/commands';
-import { highlightSelectionMatches, searchKeymap, openSearchPanel } from '@codemirror/search';
+import { history, defaultKeymap, historyKeymap, insertTab, selectAll } from '@codemirror/commands';
+import { highlightSelectionMatches, searchKeymap, openSearchPanel, searchPanelOpen } from '@codemirror/search';
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { css } from '@codemirror/lang-css';
-import { oneDark } from '@codemirror/theme-one-dark';
-import { createMobileSearchButton, createThemeToggleButton } from './mobile-search.mjs';
+import { javascript } from '@codemirror/lang-javascript';
+import { java } from '@codemirror/lang-java';
+import { markdown } from '@codemirror/lang-markdown';
+import { createMobileSearchButton } from './mobile-search.mjs';
+import { compactSearchPanel } from './compact-search.mjs';
+import { createEditorSettings, normalizeSettings } from './editor-settings.mjs';
+import { detectLanguage } from './language-detection.mjs';
+import { themes, themeLabels } from './themes.js';
 import { hideTargetUntilDialogCloses, scheduleEditorSetup } from './deferred-setup.mjs';
 import './style.css';
 
-const { isMobile } = SillyTavern.getContext();
+const { isMobile, extensionSettings, saveSettingsDebounced } = SillyTavern.getContext();
 const pendingTargets = new WeakSet();
-const lightTheme = EditorView.theme({
-    '&': {
-        color: '#24292f',
-        backgroundColor: '#ffffff',
-    },
-    '.cm-content': { caretColor: '#24292f' },
-    '.cm-cursor, .cm-dropCursor': { borderLeftColor: '#24292f' },
-    '&.cm-focused .cm-selectionBackground, ::selection': { backgroundColor: '#b6d7ff' },
-    '.cm-gutters': {
-        color: '#57606a',
-        backgroundColor: '#f6f8fa',
-        borderRight: '1px solid #d0d7de',
-    },
-    '.cm-activeLine': { backgroundColor: '#f6f8fa' },
-    '.cm-activeLineGutter': { backgroundColor: '#eaeef2' },
-    '.cm-panels': {
-        color: '#24292f',
-        backgroundColor: '#ffffff',
-        borderTop: '1px solid #d0d7de',
-    },
-    '.cm-textfield': {
-        color: '#24292f',
-        backgroundColor: '#ffffff',
-        border: '1px solid #d0d7de',
-    },
-}, { dark: false });
+const languageExtensions = { css: css(), javascript: javascript(), java: java(), markdown: markdown(), text: [] };
+
+export function cleanup() {
+    delete extensionSettings.codecode;
+    saveSettingsDebounced();
+}
 const searchLabels = {
     find: '찾기',
     replace: '바꾸기',
@@ -78,8 +64,7 @@ const observer = new MutationObserver((mutations) => {
                     ? [node]
                     : node.querySelectorAll('dialog');
                 dialogs.forEach((dialog) => {
-                    // SillyTavern creates one maximized textarea per popup
-                    // (public/scripts/chats.js, expanded editor handler).
+                    // SillyTavern의 확장 편집기는 팝업마다 입력창 하나를 생성한다.
                     const target = dialog.querySelector('textarea.maximized_textarea');
                     if (target) {
                         scheduleEditorSetup({
@@ -94,16 +79,11 @@ const observer = new MutationObserver((mutations) => {
     });
 });
 
-// SillyTavern appends popup roots directly to body. Added wrappers are scanned
-// for nested dialogs without observing every DOM mutation in the application.
+// 팝업 루트만 관찰해 채팅 전체의 DOM 변경을 감시하지 않는다.
 observer.observe(document.body, {
     childList: true,
 });
 
-/**
- * Setup CodeMirror for the target textarea element.
- * @param {HTMLTextAreaElement} target
- */
 function setupCodeMirror(target) {
     const parent = target.parentElement;
     if (!parent) {
@@ -120,12 +100,40 @@ function setupCodeMirror(target) {
     host.classList.add('codemirror-host');
     target.classList.add('displayNone');
     parent.appendChild(host);
-    const isCss = target.dataset.for === 'customCSS';
+    const source = document.getElementById(target.dataset.for);
+    const settings = normalizeSettings(extensionSettings.codecode, Object.keys(themes));
     const themeCompartment = new Compartment();
+    const languageCompartment = new Compartment();
+    const lineNumbersCompartment = new Compartment();
+    let languageChoice = 'auto';
+    let languageTimer;
+    let closed = false;
+    let controls;
+    const detect = (text) => detectLanguage({
+        id: target.dataset.for,
+        language: source?.dataset.language || source?.dataset.mode || '',
+        text,
+    });
+    let currentLanguage = detect(target.value);
+    const updateLanguage = () => {
+        if (closed) return;
+        const detected = detect(editor.state.doc.sliceString(0, 16384));
+        const language = languageChoice === 'auto' ? detected : languageChoice;
+        if (language !== currentLanguage) {
+            currentLanguage = language;
+            editor.dispatch({ effects: languageCompartment.reconfigure(languageExtensions[language]) });
+        }
+        host.dataset.language = language;
+        host.classList.toggle('codecode-plain-text-mode', languageChoice === 'text');
+    };
+    host.dataset.language = currentLanguage;
+    host.classList.toggle('codecode-plain-text-mode', languageChoice === 'text');
     const editor = new EditorView({
         doc: target.value,
         extensions: [
-            themeCompartment.of(lightTheme),
+            themeCompartment.of(themes[settings.theme]),
+            languageCompartment.of(languageExtensions[currentLanguage]),
+            lineNumbersCompartment.of(settings.lineNumbers ? lineNumbers() : []),
             highlightActiveLineGutter(),
             highlightSpecialChars(),
             history(),
@@ -149,9 +157,15 @@ function setupCodeMirror(target) {
                 if (update.docChanged) {
                     target.value = update.state.doc.toString();
                     target.dispatchEvent(new Event('input', { bubbles: true }));
+                    if (languageChoice === 'auto') {
+                        clearTimeout(languageTimer);
+                        languageTimer = setTimeout(updateLanguage, 300);
+                    }
+                }
+                if (searchPanelOpen(update.state) && !searchPanelOpen(update.startState)) {
+                    queueMicrotask(() => { if (!closed) localizeSearchPanel(host); });
                 }
             }),
-            isCss ? css() : [],
         ],
         parent: host,
     });
@@ -165,10 +179,33 @@ function setupCodeMirror(target) {
     editor.focus();
 
     addMobileSearchButton(host, editor);
-    addThemeToggleButton(host, editor, themeCompartment);
+    const container = target.closest('dialog')?.querySelector('.popup-controls') ?? host;
+    host.classList.add('has-codecode-settings');
+    controls = createEditorSettings({
+        host, container, settings, themes: themeLabels,
+        onChange: (patch) => {
+            Object.assign(settings, patch);
+            const effects = [];
+            if ('theme' in patch) effects.push(themeCompartment.reconfigure(themes[settings.theme]));
+            if ('lineNumbers' in patch) effects.push(lineNumbersCompartment.reconfigure(settings.lineNumbers ? lineNumbers() : []));
+            editor.dispatch({ effects });
+            extensionSettings.codecode = { ...settings };
+            saveSettingsDebounced();
+        },
+        onLanguageChange: (language) => {
+            languageChoice = language;
+            clearTimeout(languageTimer);
+            updateLanguage();
+        },
+        onSelectAll: () => { selectAll(editor); editor.focus(); },
+        onCopy: () => copyTextToClipboard(host.ownerDocument, editor.state.doc.toString(), host.closest('dialog')),
+    });
 
     const dialog = target.closest('dialog');
     dialog?.addEventListener('close', () => {
+        closed = true;
+        clearTimeout(languageTimer);
+        controls.destroy();
         editor.destroy();
         host.remove();
         target.classList.remove('displayNone');
@@ -184,8 +221,7 @@ function reuseCompatibleEditor(host, target) {
         }
 
         hideTargetUntilDialogCloses(target, target.closest('dialog'));
-        // A foreign CodeMirror bundle may not accept this bundle's
-        // openSearchPanel command, so trigger the editor's own keymap instead.
+        // 다른 번들의 명령과 상태가 호환되지 않을 수 있어 해당 편집기의 단축키를 사용한다.
         addMobileSearchButton(host, editor, () => openSearchWithEditorKeymap(host));
         return true;
     };
@@ -226,27 +262,6 @@ function addMobileSearchButton(host, editor, searchCommand = openSearchPanel) {
     }
 }
 
-function addThemeToggleButton(host, editor, themeCompartment) {
-    const dialog = host.closest('dialog');
-    const buttonContainer = dialog?.querySelector('.popup-controls') ?? host;
-    const existingButton = dialog?.querySelector('.cm-theme-toggle-button')
-        ?? host.querySelector('.cm-theme-toggle-button');
-    if (existingButton && existingButton.parentElement !== buttonContainer) {
-        buttonContainer.appendChild(existingButton);
-    }
-
-    const themeButton = createThemeToggleButton({
-        container: buttonContainer,
-        onThemeChange: (dark) => editor.dispatch({
-            effects: themeCompartment.reconfigure(dark ? oneDark : lightTheme),
-        }),
-    });
-
-    if (themeButton) {
-        host.classList.add('has-theme-toggle-button');
-    }
-}
-
 function localizeSearchPanel(host) {
     const panel = host.querySelector('.cm-panel.cm-search');
     if (!panel) {
@@ -264,6 +279,28 @@ function localizeSearchPanel(host) {
     setSearchLabelText(panel, 'case', searchLabels.matchCase);
     setSearchLabelText(panel, 're', searchLabels.regexp);
     setSearchLabelText(panel, 'word', searchLabels.byWord);
+    compactSearchPanel(panel);
+}
+
+async function copyTextToClipboard(doc, text, container) {
+    if (doc.defaultView.navigator.clipboard?.writeText) {
+        try {
+            await doc.defaultView.navigator.clipboard.writeText(text);
+            return;
+        } catch {
+            // 클립보드 권한이 없는 컨텍스트에서는 기존 복사 방식을 사용한다.
+        }
+    }
+
+    const textarea = doc.createElement('textarea');
+    textarea.value = text;
+    textarea.style.cssText = 'position:fixed;opacity:0;pointer-events:none;';
+    textarea.setAttribute('aria-hidden', 'true');
+    (container ?? doc.body).appendChild(textarea);
+    textarea.select();
+    const copied = doc.execCommand('copy');
+    textarea.remove();
+    return copied;
 }
 
 function setSearchInputText(panel, name, text) {
