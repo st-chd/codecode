@@ -1,174 +1,148 @@
-dialog.popup:has(.codemirror-host) {
-    width: unset;
-}
+dialog.popup:has(.codemirror-host) { width: unset; }
 
 dialog.popup .codemirror-host {
     position: relative;
+    display: flex;
+    flex-direction: column;
     text-align: initial;
     border: 1px solid var(--SmartThemeBorderColor);
     border-radius: 5px;
     overflow: hidden;
     height: 100%;
+    min-height: 0;
     width: 100%;
 }
 
-.codemirror-host .cm-editor {
-    height: 100%;
-}
+.codemirror-host .cm-editor { flex: 1; height: 100%; min-height: 0; min-width: 0; }
+.codemirror-host .cm-scroller { overflow: auto; font-family: var(--monoFontFamily); }
+.codemirror-host .cm-content { font-family: inherit; }
+.codemirror-host input[type="checkbox"] { display: inline-flex; flex-shrink: 0; }
 
-.codemirror-host .cm-editor .cm-content {
-    font-family: var(--monoFontFamily);
-}
-
-.codemirror-host .cm-editor input[type="checkbox"] {
-    display: inline-flex;
-}
-
-.codemirror-host .cm-editor .cm-panels {
-    border-radius: 5px;
-}
-
-.codemirror-host .cm-editor .cm-textfield {
+.codemirror-host .cm-editor .cm-textfield,
+.codemirror-host .cm-editor .cm-button {
     border-radius: 5px;
     font-family: var(--mainFontFamily);
     padding: 3px 5px;
-    margin: 5px 0;
-    height: fit-content;
+    margin: 3px 0;
+    height: auto;
 }
 
 .codemirror-host .cm-editor .cm-button {
     cursor: pointer;
-    transition: background-color 0.2s, box-shadow 0.2s, transform 0.2s;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     text-align: center;
     width: auto;
     background-image: none;
-    border-radius: 5px;
-    padding: 3px 5px;
-    margin: 5px 0;
 }
 
-dialog.popup:has(.codemirror-host.has-mobile-search-button) .popup-controls {
-    position: relative;
+dialog.popup:has(.codemirror-host) .popup-controls {
     align-self: stretch;
     width: 100%;
     justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
 }
 
-dialog.popup:has(.codemirror-host.has-theme-toggle-button) .popup-controls {
-    position: relative;
-    align-self: stretch;
-    width: 100%;
-    justify-content: center;
-}
-
-dialog.popup .popup-controls > .cm-search-button {
-    position: absolute;
-    top: 50%;
-    right: 0;
-    transform: translateY(-50%);
-    height: auto;
-    min-height: 0;
+dialog.popup .popup-controls > :is(.cm-search-button, .codecode-settings-button, .codecode-select-all-button) {
+    position: static;
     min-width: 44px;
-    margin: 0;
+    height: fit-content;
+    margin: 5px 0;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
 }
 
-dialog.popup .popup-controls > .cm-search-button:hover {
-    background-color: var(--SmartThemeBorderColor);
-}
-
-dialog.popup .popup-controls > .cm-theme-toggle-button {
-    position: absolute;
-    top: 50%;
-    right: 0;
-    transform: translateY(-50%);
-    height: auto;
-    min-height: 0;
-    width: 44px;
-    margin: 0;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-}
-
-dialog.popup .popup-controls:has(.cm-search-button) > .cm-theme-toggle-button {
-    right: 52px;
-}
-
-dialog.popup .popup-controls > .cm-theme-toggle-button:hover {
-    background-color: var(--SmartThemeBorderColor);
-}
-
-dialog.popup .popup-controls > .cm-theme-toggle-button:active {
-    transform: translateY(-50%) scale(0.96);
-}
-
-dialog.popup .popup-controls > .cm-theme-toggle-button:focus-visible {
+.codemirror-host button:focus-visible,
+dialog.popup .popup-controls > :is(.cm-search-button, .codecode-settings-button, .codecode-select-all-button):focus-visible {
     outline: 2px solid var(--SmartThemeQuoteColor);
-    outline-offset: 2px;
+    outline-offset: -2px;
 }
 
-dialog.popup .popup-controls > .cm-search-button:active {
-    transform: translateY(-50%) scale(0.96);
-}
-
-dialog.popup .popup-controls > .cm-search-button:focus-visible {
-    outline: 2px solid var(--SmartThemeQuoteColor);
-    outline-offset: 2px;
-}
-
-dialog.popup:has(.cm-panel.cm-search) .popup-controls > .cm-search-button {
-    display: none;
-}
-
-.codemirror-host.has-mobile-search-button .cm-editor .cm-panel.cm-search {
+.codecode-settings-panel {
+    flex: 0 0 auto;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 6px 8px;
-    padding: 8px 52px 8px 8px;
+    gap: 8px 12px;
+    padding: 8px;
+    max-height: 35dvh;
+    overflow-y: auto;
+    color: var(--SmartThemeBodyColor);
+    background: var(--SmartThemeBlurTintColor);
+    border-bottom: 1px solid var(--SmartThemeBorderColor);
+    font-family: var(--mainFontFamily);
+    font-size: 14px;
 }
 
+.codecode-settings-panel[hidden] { display: none; }
+.codecode-settings-panel label,
+.codecode-font-controls { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.codecode-settings-panel select { width: auto; min-width: 0; max-width: 100%; margin: 0; }
+.codecode-font-controls button {
+    min-width: 40px;
+    min-height: 36px;
+    border: 1px solid var(--SmartThemeBorderColor);
+    border-radius: 5px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+.codecode-font-controls button:disabled { opacity: 0.4; cursor: default; }
+
+.codemirror-host .cm-editor .codecode-compact-search { max-height: 45dvh; overflow-y: auto; }
+.codemirror-host .codecode-compact-search:not(.codecode-replace-visible) > :is(input[name="replace"], button[name="replace"], button[name="replaceAll"], br) {
+    display: none;
+}
+.codemirror-host .codecode-replace-toggle { display: inline-flex; align-items: center; }
+
+.codemirror-host.has-mobile-search-button .cm-editor .cm-panel.cm-search {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: center;
+    gap: 4px 6px;
+    padding: 6px;
+    font-size: 13px;
+}
 .codemirror-host.has-mobile-search-button .cm-editor .cm-panel.cm-search > .cm-textfield {
-    flex: 1 0 100%;
+    grid-column: 1 / -1;
     min-width: 0;
-    min-height: 44px;
+    width: 100%;
+    min-height: 40px;
     margin: 0;
+    font-size: 16px;
 }
-
+.codemirror-host.has-mobile-search-button .cm-editor .cm-panel.cm-search > input[name="search"] { width: calc(100% - 44px); }
 .codemirror-host.has-mobile-search-button .cm-editor .cm-panel.cm-search > label {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    min-height: 44px;
-}
-
-.codemirror-host.has-mobile-search-button .cm-editor .cm-panel.cm-search > .cm-button:not([name="close"]) {
-    flex: 1 1 auto;
-    min-height: 44px;
+    gap: 3px;
+    min-height: 36px;
     margin: 0;
-    padding: 6px 10px;
+    line-height: 1.2;
 }
-
+.codemirror-host.has-mobile-search-button .cm-editor .cm-panel.cm-search > .codecode-replace-toggle { grid-column: 1 / -1; }
+.codemirror-host.has-mobile-search-button .cm-editor .cm-panel.cm-search > .cm-button {
+    min-height: 40px;
+    min-width: 0;
+    margin: 0;
+    padding: 4px;
+}
+.codemirror-host.has-mobile-search-button .cm-editor .cm-panel.cm-search > button[name="replaceAll"] { grid-column: span 2; }
+.codemirror-host.has-mobile-search-button .cm-editor .cm-panel.cm-search > br { display: none; }
 .codemirror-host.has-mobile-search-button .cm-editor .cm-panel.cm-search > button[name="close"] {
-    top: 4px;
-    right: 4px;
+    position: absolute;
+    top: 6px;
+    right: 6px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
     border-radius: 5px;
     cursor: pointer;
     font-size: 1.4rem;
     line-height: 1;
     touch-action: manipulation;
-}
-
-.codemirror-host.has-mobile-search-button .cm-editor .cm-panel.cm-search > button[name="close"]:focus-visible {
-    outline: 2px solid var(--SmartThemeQuoteColor);
-    outline-offset: -2px;
 }
