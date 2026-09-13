@@ -1,15 +1,14 @@
-export const defaultSettings = { theme: 'light', lineNumbers: false, fontSize: 14 };
+export const defaultSettings = { theme: 'neo', lineNumbers: false };
 
 export function normalizeSettings(value, themes) {
     const settings = value && typeof value === 'object' ? value : {};
     return {
         theme: themes.includes(settings.theme) ? settings.theme : defaultSettings.theme,
         lineNumbers: typeof settings.lineNumbers === 'boolean' ? settings.lineNumbers : defaultSettings.lineNumbers,
-        fontSize: Number.isFinite(settings.fontSize) ? Math.min(32, Math.max(10, Math.round(settings.fontSize))) : defaultSettings.fontSize,
     };
 }
 
-export function createEditorSettings({ host, container, settings, themes, languages, detectedLanguage, onChange, onLanguageChange, onSelectAll }) {
+export function createEditorSettings({ host, container, settings, themes, onChange, onLanguageChange, onSelectAll, onCopy }) {
     const doc = host.ownerDocument;
     const button = doc.createElement('button');
     button.type = 'button';
@@ -39,12 +38,16 @@ export function createEditorSettings({ host, container, settings, themes, langua
         panel.appendChild(label);
         return select;
     };
-    const languageSelect = addSelect('언어', languages, 'auto', onLanguageChange);
-    const updateDetectedLanguage = (language) => {
-        languageSelect.options[0].textContent = `자동 감지 (${languages[language]})`;
-    };
-    updateDetectedLanguage(detectedLanguage);
     addSelect('테마', themes, settings.theme, (theme) => onChange({ theme }));
+    const languageLabel = doc.createElement('label');
+    languageLabel.className = 'codecode-language-control';
+    const plainText = doc.createElement('input');
+    plainText.type = 'checkbox';
+    languageLabel.append(plainText, doc.createTextNode(' 일반 텍스트 모드'));
+    panel.appendChild(languageLabel);
+    plainText.addEventListener('change', () => {
+        onLanguageChange(plainText.checked ? 'text' : 'auto');
+    });
     const lineLabel = doc.createElement('label');
     const lines = doc.createElement('input');
     lines.type = 'checkbox';
@@ -53,39 +56,24 @@ export function createEditorSettings({ host, container, settings, themes, langua
     lineLabel.append(lines, doc.createTextNode(' 줄 번호 표시'));
     panel.appendChild(lineLabel);
 
-    const fontRow = doc.createElement('div');
-    fontRow.className = 'codecode-font-controls';
-    const size = doc.createElement('output');
-    size.setAttribute('aria-live', 'polite');
-    const smaller = doc.createElement('button');
-    const larger = doc.createElement('button');
-    const updateSize = () => {
-        size.textContent = `글꼴 ${settings.fontSize}px`;
-        smaller.disabled = settings.fontSize <= 10;
-        larger.disabled = settings.fontSize >= 32;
-    };
-    for (const [control, label, delta] of [[smaller, '글꼴 크기 줄이기', -1], [larger, '글꼴 크기 키우기', 1]]) {
-        control.type = 'button';
-        control.textContent = delta < 0 ? 'A−' : 'A+';
-        control.setAttribute('aria-label', label);
-        control.addEventListener('click', () => {
-            onChange({ fontSize: Math.min(32, Math.max(10, settings.fontSize + delta)) });
-            updateSize();
-        });
-    }
-    updateSize();
-    fontRow.append(smaller, size, larger);
-    panel.appendChild(fontRow);
-
+    const actions = doc.createElement('div');
+    actions.className = 'codecode-editor-actions';
     const selectAll = doc.createElement('button');
     selectAll.type = 'button';
     selectAll.className = 'menu_button codecode-select-all-button';
     selectAll.textContent = '전체 선택';
     selectAll.addEventListener('click', () => {
-        panel.hidden = true;
-        button.setAttribute('aria-expanded', 'false');
         onSelectAll();
     });
+    const copy = doc.createElement('button');
+    copy.type = 'button';
+    copy.className = 'menu_button codecode-copy-button';
+    copy.textContent = '복사';
+    copy.addEventListener('click', () => {
+        onCopy();
+    });
+    actions.append(selectAll, copy);
+    panel.appendChild(actions);
     button.addEventListener('click', () => {
         panel.hidden = !panel.hidden;
         button.setAttribute('aria-expanded', String(!panel.hidden));
@@ -99,6 +87,6 @@ export function createEditorSettings({ host, container, settings, themes, langua
         }
     });
     host.prepend(panel);
-    container.append(selectAll, button);
-    return { updateDetectedLanguage, destroy: () => { panel.remove(); button.remove(); selectAll.remove(); } };
+    container.append(button);
+    return { destroy: () => { panel.remove(); button.remove(); selectAll.remove(); copy.remove(); } };
 }

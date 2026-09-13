@@ -13,7 +13,7 @@ import { markdown } from '@codemirror/lang-markdown';
 import { createMobileSearchButton } from './mobile-search.mjs';
 import { compactSearchPanel } from './compact-search.mjs';
 import { createEditorSettings, normalizeSettings } from './editor-settings.mjs';
-import { detectLanguage, languageLabels } from './language-detection.mjs';
+import { detectLanguage } from './language-detection.mjs';
 import { themes, themeLabels } from './themes.js';
 import { hideTargetUntilDialogCloses, scheduleEditorSetup } from './deferred-setup.mjs';
 import './style.css';
@@ -109,7 +109,6 @@ function setupCodeMirror(target) {
     const themeCompartment = new Compartment();
     const languageCompartment = new Compartment();
     const lineNumbersCompartment = new Compartment();
-    const fontCompartment = new Compartment();
     let languageChoice = 'auto';
     let languageTimer;
     let closed = false;
@@ -120,26 +119,25 @@ function setupCodeMirror(target) {
         text,
     });
     let currentLanguage = detect(target.value);
-    const fontTheme = () => EditorView.theme({ '.cm-scroller': { fontSize: `${settings.fontSize}px` } });
     const updateLanguage = () => {
         if (closed) return;
         const detected = detect(editor.state.doc.sliceString(0, 16384));
-        controls?.updateDetectedLanguage(detected);
         const language = languageChoice === 'auto' ? detected : languageChoice;
         if (language !== currentLanguage) {
             currentLanguage = language;
             editor.dispatch({ effects: languageCompartment.reconfigure(languageExtensions[language]) });
         }
         host.dataset.language = language;
+        host.classList.toggle('codecode-plain-text-mode', languageChoice === 'text');
     };
     host.dataset.language = currentLanguage;
+    host.classList.toggle('codecode-plain-text-mode', languageChoice === 'text');
     const editor = new EditorView({
         doc: target.value,
         extensions: [
             themeCompartment.of(themes[settings.theme]),
             languageCompartment.of(languageExtensions[currentLanguage]),
             lineNumbersCompartment.of(settings.lineNumbers ? lineNumbers() : []),
-            fontCompartment.of(fontTheme()),
             highlightActiveLineGutter(),
             highlightSpecialChars(),
             history(),
@@ -188,14 +186,12 @@ function setupCodeMirror(target) {
     const container = target.closest('dialog')?.querySelector('.popup-controls') ?? host;
     host.classList.add('has-codecode-settings');
     controls = createEditorSettings({
-        host, container, settings, themes: themeLabels, languages: languageLabels,
-        detectedLanguage: currentLanguage,
+        host, container, settings, themes: themeLabels,
         onChange: (patch) => {
             Object.assign(settings, patch);
             const effects = [];
             if ('theme' in patch) effects.push(themeCompartment.reconfigure(themes[settings.theme]));
             if ('lineNumbers' in patch) effects.push(lineNumbersCompartment.reconfigure(settings.lineNumbers ? lineNumbers() : []));
-            if ('fontSize' in patch) effects.push(fontCompartment.reconfigure(fontTheme()));
             editor.dispatch({ effects });
             extensionSettings.codecode = { ...settings };
             saveSettingsDebounced();
@@ -206,6 +202,7 @@ function setupCodeMirror(target) {
             updateLanguage();
         },
         onSelectAll: () => { selectAll(editor); editor.focus(); },
+        onCopy: () => copyTextToClipboard(host.ownerDocument, editor.state.doc.toString()),
     });
 
     const dialog = target.closest('dialog');
@@ -287,6 +284,25 @@ function localizeSearchPanel(host) {
     setSearchLabelText(panel, 're', searchLabels.regexp);
     setSearchLabelText(panel, 'word', searchLabels.byWord);
     compactSearchPanel(panel);
+}
+
+async function copyTextToClipboard(doc, text) {
+    if (doc.defaultView.navigator.clipboard?.writeText) {
+        try {
+            await doc.defaultView.navigator.clipboard.writeText(text);
+            return;
+        } catch {
+            // 클립보드 권한이 없는 컨텍스트에서는 기존 복사 방식을 사용한다.
+        }
+    }
+
+    const textarea = doc.createElement('textarea');
+    textarea.value = text;
+    textarea.style.cssText = 'position:fixed;opacity:0;';
+    doc.body.appendChild(textarea);
+    textarea.select();
+    doc.execCommand('copy');
+    textarea.remove();
 }
 
 function setSearchInputText(panel, name, text) {

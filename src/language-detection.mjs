@@ -1,12 +1,3 @@
-export const languageLabels = {
-    auto: '자동 감지',
-    css: 'CSS',
-    javascript: 'JavaScript',
-    java: 'Java',
-    markdown: 'Markdown',
-    text: '일반 텍스트',
-};
-
 const aliases = {
     css: 'css', 'text/css': 'css',
     js: 'javascript', javascript: 'javascript', 'text/javascript': 'javascript',
