@@ -109,6 +109,14 @@ function setupCodeMirror(target) {
     let languageTimer;
     let closed = false;
     let controls;
+    let syncTimer;
+    // 입력이 멈춘 뒤 한 번만 원래 입력칸으로 전달한다.
+    const syncTarget = () => {
+        clearTimeout(syncTimer);
+        syncTimer = undefined;
+        target.value = editor.state.doc.toString();
+        target.dispatchEvent(new Event('input', { bubbles: true }));
+    };
     const detect = (text) => detectLanguage({
         id: target.dataset.for,
         language: source?.dataset.language || source?.dataset.mode || '',
@@ -155,8 +163,8 @@ function setupCodeMirror(target) {
             ]),
             EditorView.updateListener.of((update) => {
                 if (update.docChanged) {
-                    target.value = update.state.doc.toString();
-                    target.dispatchEvent(new Event('input', { bubbles: true }));
+                    clearTimeout(syncTimer);
+                    syncTimer = setTimeout(syncTarget, 150);
                     if (languageChoice === 'auto') {
                         clearTimeout(languageTimer);
                         languageTimer = setTimeout(updateLanguage, 300);
@@ -203,6 +211,7 @@ function setupCodeMirror(target) {
 
     const dialog = target.closest('dialog');
     dialog?.addEventListener('close', () => {
+        if (syncTimer !== undefined) syncTarget();
         closed = true;
         clearTimeout(languageTimer);
         controls.destroy();

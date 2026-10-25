@@ -1,6 +1,6 @@
 {
   "name": "extension-codemirror",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": true,
   "dependencies": {
     "@codemirror/lang-css": "^6.3.0",
