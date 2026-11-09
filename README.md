@@ -7,7 +7,7 @@
 ### version: 1.2.1 (2026-10-26)
 
 - 편집기에서 타이핑할 때 반응이 늦던 현상을 줄였습니다. 긴 글일수록 차이가 큽니다.
-- 입력창에 글자마다 반영하지 않고 입력이 멈추면 한 번에 반영합니다. 편집기를 닫을 때 남은 내용도 바로 반영되니 입력한 내용이 사라지지 않습니다.
+- 원래 입력창에는 글자마다 반영하지 않고 입력이 멈추면 한 번에 반영합니다. 편집기를 닫으면 남은 내용도 바로 반영됩니다.
 
 <details>
 <summary><h3>이전 변경 내역</h3></summary>
@@ -17,7 +17,7 @@
 - CodeMirror 6 기반 편집기를 SillyTavern의 확장 텍스트 입력창에 맞췄습니다.
 - 입력창의 메타데이터와 내용 앞부분을 보고 CSS, JavaScript, Java, Markdown을 자동 감지합니다.
 - `일반 텍스트 모드`를 켜면 구문 강조 없이 SillyTavern 기본 글꼴로 표시합니다. 끄면 자동 감지로 돌아갑니다.
-- `neo`, `idea`, `solarized light`, `duotone-light`, `nord`, `ayu-mirage`, `material-darker` 테마를 고를 수 있습니다. 밝은 테마 4개와 어두운 테마 3개입니다.
+- `neo`, `idea`, `solarized light`, `duotone-light`, `nord`, `ayu-mirage`, `material-darker` 테마를 고를 수 있습니다.
 - 설정 패널에서 `줄 번호 표시`, `전체 선택`, `복사`를 사용할 수 있습니다. 글꼴 크기는 SillyTavern 설정을 따릅니다.
 - 검색 패널을 한국어로 옮기고 찾기·바꾸기 입력창 높이와 검색 버튼 글꼴을 메인 폰트 크기에 맞췄습니다. `바꾸기`를 켤 때만 바꾸기 입력과 버튼을 표시합니다.
 - 모바일 검색 버튼과 좁은 화면 레이아웃을 지원합니다. 데스크톱에서는 `Ctrl`+`F`로 검색 패널을 열 수 있습니다.
@@ -47,7 +47,7 @@ https://github.com/st-chd/codecode
 ## 출처 및 크레딧
 
 - 원본 프로젝트: [SillyTavern/Extension-CodeMirror](https://github.com/SillyTavern/Extension-CodeMirror)
-- 코드 검토·수정·테스트에 Codex(GPT)와 Claude를 사용했습니다.
+- 코드 검토와 수정, 테스트에 Codex(GPT)와 Claude를 사용했습니다.
 
 ## 라이선스
 
