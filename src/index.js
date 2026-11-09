@@ -106,9 +106,13 @@ function setupCodeMirror(target) {
     const languageCompartment = new Compartment();
     const lineNumbersCompartment = new Compartment();
     let languageChoice = 'auto';
-    let languageTimer;
     let closed = false;
     let controls;
+    // 긴 글에서 글자마다 전체 내용을 복사하면 입력이 느려져, 입력이 멈춘 뒤 한 번만 원래 입력칸으로 전달한다.
+    const targetSync = debounce(() => {
+        target.value = editor.state.doc.toString();
+        target.dispatchEvent(new Event('input', { bubbles: true }));
+    }, 150);
     const detect = (text) => detectLanguage({
         id: target.dataset.for,
         language: source?.dataset.language || source?.dataset.mode || '',
@@ -126,6 +130,7 @@ function setupCodeMirror(target) {
         host.dataset.language = language;
         host.classList.toggle('codecode-plain-text-mode', languageChoice === 'text');
     };
+    const languageUpdate = debounce(updateLanguage, 300);
     host.dataset.language = currentLanguage;
     host.classList.toggle('codecode-plain-text-mode', languageChoice === 'text');
     const editor = new EditorView({
@@ -155,12 +160,8 @@ function setupCodeMirror(target) {
             ]),
             EditorView.updateListener.of((update) => {
                 if (update.docChanged) {
-                    target.value = update.state.doc.toString();
-                    target.dispatchEvent(new Event('input', { bubbles: true }));
-                    if (languageChoice === 'auto') {
-                        clearTimeout(languageTimer);
-                        languageTimer = setTimeout(updateLanguage, 300);
-                    }
+                    targetSync.schedule();
+                    if (languageChoice === 'auto') languageUpdate.schedule();
                 }
                 if (searchPanelOpen(update.state) && !searchPanelOpen(update.startState)) {
                     queueMicrotask(() => { if (!closed) localizeSearchPanel(host); });
@@ -194,22 +195,56 @@ function setupCodeMirror(target) {
         },
         onLanguageChange: (language) => {
             languageChoice = language;
-            clearTimeout(languageTimer);
+            languageUpdate.cancel();
             updateLanguage();
         },
         onSelectAll: () => { selectAll(editor); editor.focus(); },
         onCopy: () => copyTextToClipboard(host.ownerDocument, editor.state.doc.toString(), host.closest('dialog')),
     });
 
+    // 탭을 내리거나 페이지를 떠날 때 남은 입력을 원래 입력칸에 바로 넘긴다. 저장은 본체가 약 1초 뒤에 하므로 그 전에 새로고침하면 남지 않는다.
+    const flushOnHide = () => {
+        if (document.visibilityState === 'hidden') targetSync.flush();
+    };
+    document.addEventListener('visibilitychange', flushOnHide);
+    window.addEventListener('pagehide', targetSync.flush);
+
     const dialog = target.closest('dialog');
     dialog?.addEventListener('close', () => {
+        targetSync.flush();
+        document.removeEventListener('visibilitychange', flushOnHide);
+        window.removeEventListener('pagehide', targetSync.flush);
         closed = true;
-        clearTimeout(languageTimer);
+        languageUpdate.cancel();
         controls.destroy();
         editor.destroy();
         host.remove();
         target.classList.remove('displayNone');
     }, { once: true });
+}
+
+// 마지막 schedule 뒤 ms가 지나면 한 번 실행한다. flush는 대기 중일 때만 바로 실행한다.
+function debounce(fn, ms) {
+    let timer;
+    const run = () => {
+        timer = undefined;
+        fn();
+    };
+    return {
+        schedule() {
+            clearTimeout(timer);
+            timer = setTimeout(run, ms);
+        },
+        flush() {
+            if (timer === undefined) return;
+            clearTimeout(timer);
+            run();
+        },
+        cancel() {
+            clearTimeout(timer);
+            timer = undefined;
+        },
+    };
 }
 
 function reuseCompatibleEditor(host, target) {
