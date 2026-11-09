@@ -202,7 +202,7 @@ function setupCodeMirror(target) {
         onCopy: () => copyTextToClipboard(host.ownerDocument, editor.state.doc.toString(), host.closest('dialog')),
     });
 
-    // 편집기를 연 채 탭을 내리거나 새로고침해도 남은 입력을 잃지 않게 바로 반영한다.
+    // 탭을 내리거나 페이지를 떠날 때 남은 입력을 원래 입력칸에 바로 넘긴다. 저장은 본체가 약 1초 뒤에 하므로 그 전에 새로고침하면 남지 않는다.
     const flushOnHide = () => {
         if (document.visibilityState === 'hidden') targetSync.flush();
     };
