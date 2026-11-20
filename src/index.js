@@ -98,6 +98,8 @@ function setupCodeMirror(target) {
 
     const host = document.createElement('div');
     host.classList.add('codemirror-host');
+    // 열기 애니메이션을 기다리지 않도록 이 편집기 팝업만 애니메이션을 끈다.
+    target.closest('dialog')?.classList.replace('popup--animation-fast', 'popup--animation-none');
     target.classList.add('displayNone');
     parent.appendChild(host);
     const source = document.getElementById(target.dataset.for);
@@ -177,7 +179,8 @@ function setupCodeMirror(target) {
             head: editor.state.doc.length,
         },
     });
-    editor.focus();
+    // 모바일에서 바로 포커스하면 키보드가 올라오며 화면 전체를 다시 그려 열기가 느려진다. 누른 곳에서 편집을 시작한다.
+    if (!(isMobile() || window.matchMedia('(max-width: 600px)').matches)) editor.focus();
 
     addMobileSearchButton(host, editor);
     const container = target.closest('dialog')?.querySelector('.popup-controls') ?? host;
