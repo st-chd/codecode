@@ -80,6 +80,8 @@ export function createEditorSettings({ host, container, settings, themes, onChan
     });
     panel.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
+            // 팝업(dialog)이 Esc로 닫히는 기본 동작을 막아 설정 패널만 닫는다.
+            event.preventDefault();
             event.stopPropagation();
             panel.hidden = true;
             button.setAttribute('aria-expanded', 'false');

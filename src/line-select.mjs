@@ -10,8 +10,10 @@ const previewField = StateField.define({
             if (!effect.is(setPreview)) continue;
             if (!effect.value) return Decoration.none;
             const { from, to } = effect.value;
+            // 선택 끝이 다음 줄 시작이면 그 줄은 선택에 들어가지 않으므로 칠하지 않는다.
+            const last = to > from && tr.state.doc.lineAt(to).from === to ? to - 1 : to;
             const ranges = [];
-            for (let pos = from; pos <= to;) {
+            for (let pos = from; pos <= last;) {
                 const line = tr.state.doc.lineAt(pos);
                 ranges.push(Decoration.line({ class: 'cm-codecode-lineSelect' }).range(line.from));
                 pos = line.to + 1;

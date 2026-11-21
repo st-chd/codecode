@@ -9,7 +9,6 @@
     "version": "1.2.1",
     "homePage": "https://github.com/st-chd/codecode",
     "hooks": {
-        "clean": "cleanup",
-        "delete": "cleanup"
+        "clean": "cleanup"
     }
 }

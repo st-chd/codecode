@@ -1,9 +1,9 @@
 import { EditorView } from 'codemirror';
-import { highlightActiveLineGutter, highlightSpecialChars, dropCursor, highlightActiveLine, keymap } from '@codemirror/view';
+import { highlightActiveLineGutter, highlightSpecialChars, drawSelection, dropCursor, highlightActiveLine, keymap } from '@codemirror/view';
 export { EditorView } from '@codemirror/view';
 import { Compartment, EditorState } from '@codemirror/state';
 import { indentOnInput, syntaxHighlighting, defaultHighlightStyle, bracketMatching } from '@codemirror/language';
-import { history, defaultKeymap, historyKeymap, insertTab, selectAll } from '@codemirror/commands';
+import { history, defaultKeymap, historyKeymap, insertTab, indentLess, selectAll } from '@codemirror/commands';
 import { highlightSelectionMatches, searchKeymap, openSearchPanel, searchPanelOpen } from '@codemirror/search';
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { css } from '@codemirror/lang-css';
@@ -136,6 +136,9 @@ function setupCodeMirror(target) {
     const languageUpdate = debounce(updateLanguage, 300);
     host.dataset.language = currentLanguage;
     host.classList.toggle('codecode-plain-text-mode', languageChoice === 'text');
+    // 본체처럼 확장 버튼에 data-tab이 있거나 코드 모드일 때만 Tab으로 탭을 넣는다. 그 밖에는 Tab이 다음 버튼으로 포커스를 옮긴다.
+    const tabAllowed = () => Boolean(document.querySelector(`.editor_maximize[data-for="${CSS.escape(target.dataset.for ?? '')}"][data-tab]`))
+        || ['css', 'javascript', 'java'].includes(currentLanguage);
     const editor = new EditorView({
         doc: target.value,
         extensions: [
@@ -144,6 +147,9 @@ function setupCodeMirror(target) {
             lineNumbersCompartment.of(settings.lineNumbers ? lineNumberGutter() : []),
             highlightActiveLineGutter(),
             highlightSpecialChars(),
+            // 검색의 '전체'처럼 여러 곳을 한 번에 선택하려면 다중 선택과 선택 그리기가 필요하다.
+            EditorState.allowMultipleSelections.of(true),
+            drawSelection(),
             history(),
             dropCursor(),
             EditorState.phrases.of(searchPhrases),
@@ -163,7 +169,8 @@ function setupCodeMirror(target) {
                 ...defaultKeymap,
                 ...searchKeymap,
                 ...historyKeymap,
-                { key: 'Tab', run: insertTab },
+                { key: 'Tab', run: (view) => tabAllowed() && insertTab(view) },
+                { key: 'Shift-Tab', run: (view) => tabAllowed() && indentLess(view) },
             ]),
             EditorView.updateListener.of((update) => {
                 if (update.docChanged) {
