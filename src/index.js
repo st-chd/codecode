@@ -152,6 +152,10 @@ function setupCodeMirror(target) {
             bracketMatching(),
             closeBrackets(),
             highlightActiveLine(),
+            // 선택이 있을 때는 현재 줄 배경을 꺼서, 선택이 끝난 다음 줄까지 선택된 것처럼 보이지 않게 한다.
+            EditorView.editorAttributes.compute(['selection'], (state) => (
+                state.selection.main.empty ? {} : { class: 'codecode-has-selection' }
+            )),
             EditorView.lineWrapping,
             highlightSelectionMatches(),
             keymap.of([
