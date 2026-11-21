@@ -30,6 +30,7 @@ function createTheme(p) {
         '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': { backgroundColor: p.selection },
         '.cm-gutters': { color: p.muted, backgroundColor: p.gutter, borderRight: 'none' },
         '.cm-activeLine, .cm-activeLineGutter': { backgroundColor: p.active },
+        '.cm-line.cm-codecode-lineSelect': { backgroundColor: p.selection },
         '.cm-panels': { color: p.fg, backgroundColor: p.bg },
         '.cm-textfield, .cm-button': { color: p.fg, backgroundColor: p.gutter, border: `1px solid ${p.muted}` },
         '.cm-searchMatch': { backgroundColor: p.selection, outline: `1px solid ${p.muted}` },

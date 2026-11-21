@@ -1,5 +1,5 @@
 import { EditorView } from 'codemirror';
-import { lineNumbers, highlightActiveLineGutter, highlightSpecialChars, dropCursor, highlightActiveLine, keymap } from '@codemirror/view';
+import { highlightActiveLineGutter, highlightSpecialChars, dropCursor, highlightActiveLine, keymap } from '@codemirror/view';
 export { EditorView } from '@codemirror/view';
 import { Compartment, EditorState } from '@codemirror/state';
 import { indentOnInput, syntaxHighlighting, defaultHighlightStyle, bracketMatching } from '@codemirror/language';
@@ -15,6 +15,7 @@ import { compactSearchPanel } from './compact-search.mjs';
 import { createEditorSettings, normalizeSettings } from './editor-settings.mjs';
 import { detectLanguage } from './language-detection.mjs';
 import { themes, themeLabels } from './themes.js';
+import { lineNumberGutter } from './line-select.mjs';
 import { hideTargetUntilDialogCloses, scheduleEditorSetup } from './deferred-setup.mjs';
 import './style.css';
 
@@ -140,7 +141,7 @@ function setupCodeMirror(target) {
         extensions: [
             themeCompartment.of(themes[settings.theme]),
             languageCompartment.of(languageExtensions[currentLanguage]),
-            lineNumbersCompartment.of(settings.lineNumbers ? lineNumbers() : []),
+            lineNumbersCompartment.of(settings.lineNumbers ? lineNumberGutter() : []),
             highlightActiveLineGutter(),
             highlightSpecialChars(),
             history(),
@@ -191,7 +192,7 @@ function setupCodeMirror(target) {
             Object.assign(settings, patch);
             const effects = [];
             if ('theme' in patch) effects.push(themeCompartment.reconfigure(themes[settings.theme]));
-            if ('lineNumbers' in patch) effects.push(lineNumbersCompartment.reconfigure(settings.lineNumbers ? lineNumbers() : []));
+            if ('lineNumbers' in patch) effects.push(lineNumbersCompartment.reconfigure(settings.lineNumbers ? lineNumberGutter() : []));
             editor.dispatch({ effects });
             extensionSettings.codecode = { ...settings };
             saveSettingsDebounced();
