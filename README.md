@@ -2,6 +2,12 @@
 
 [SillyTavern의 확장 텍스트 편집기](https://github.com/SillyTavern/Extension-CodeMirror)를 개선한 포크입니다.
 
+## 미리 보기
+
+|일반 텍스트 모드|줄번호 및 바꾸기 표시|
+|---|---|
+|<img src="https://raw.githubusercontent.com/st-chd/chd-asset/refs/heads/main/Asset/codecode-Preview_1.png">|<img src="https://raw.githubusercontent.com/st-chd/chd-asset/refs/heads/main/Asset/codecode-Preview_2.png"> |
+
 ## 포크 수정 내역
 
 ### version: 1.2.1 (2026-10-26)
