@@ -2,15 +2,32 @@
 
 [SillyTavern의 확장 텍스트 편집기](https://github.com/SillyTavern/Extension-CodeMirror)를 개선한 포크입니다.
 
+## 미리 보기
+
+|일반 텍스트 모드|줄번호 및 바꾸기 표시|
+|---|---|
+|<img src="https://raw.githubusercontent.com/st-chd/chd-asset/refs/heads/main/Asset/codecode-Preview_1.png">|<img src="https://raw.githubusercontent.com/st-chd/chd-asset/refs/heads/main/Asset/codecode-Preview_2.png"> |
+
 ## 포크 수정 내역
+
+### version: 1.2.2 (2026-11-24)
+
+- `줄 번호 표시`를 켜면 줄 번호를 눌러 그 줄 전체를 선택할 수 있습니다. 위아래로 끌면 여러 줄이 선택되고, Shift를 누른 채 누르면 그 줄까지 선택이 늘어납니다. 모바일에서도 됩니다.
+- 편집기가 더 빨리 열립니다. 모바일에서는 열자마자 키보드가 올라오지 않고, 편집할 곳을 눌러야 올라옵니다.
+- 검색에서 `전체`를 눌렀을 때, 하나만 선택되지 않고 일치하는 곳이 모두 선택됩니다.
+- Tab 키는 CSS, JavaScript 같은 코드를 편집할 때만 탭 문자를 넣습니다. 일반 글에서는 다음 버튼으로 넘어갑니다.
+- 설정 패널에서 Esc를 누르면 편집기 전체가 아니라 설정 패널만 닫힙니다.
+- 확장을 삭제할 때 데이터 정리를 고르지 않았는데도 설정이 지워지던 문제를 고쳤습니다.
+- 모바일에서 줄 번호를 끌 때 한 줄이 더 칠해지던 문제를 고쳤습니다.
+- 좁은 화면(320px)에서 `대/소문자 구분` 같은 검색 옵션 글자가 잘리던 문제를 고쳤습니다.
+
+<details>
+<summary><h3>이전 변경 내역</h3></summary>
 
 ### version: 1.2.1 (2026-10-26)
 
 - 편집기에서 타이핑할 때 반응이 늦던 현상을 줄였습니다. 긴 글일수록 차이가 큽니다.
 - 원래 입력창에는 글자마다 반영하지 않고 입력이 멈추면 한 번에 반영합니다. 편집기를 닫으면 남은 내용도 바로 반영됩니다.
-
-<details>
-<summary><h3>이전 변경 내역</h3></summary>
 
 ### version: 1.2.0 (2026-09-14)
 

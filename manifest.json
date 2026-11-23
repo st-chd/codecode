@@ -6,10 +6,9 @@
     "js": "dist/index.js",
     "css": "",
     "author": "CH",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "homePage": "https://github.com/st-chd/codecode",
     "hooks": {
-        "clean": "cleanup",
-        "delete": "cleanup"
+        "clean": "cleanup"
     }
 }

@@ -1,9 +1,9 @@
 import { EditorView } from 'codemirror';
-import { lineNumbers, highlightActiveLineGutter, highlightSpecialChars, dropCursor, highlightActiveLine, keymap } from '@codemirror/view';
+import { highlightActiveLineGutter, highlightSpecialChars, drawSelection, dropCursor, highlightActiveLine, keymap } from '@codemirror/view';
 export { EditorView } from '@codemirror/view';
 import { Compartment, EditorState } from '@codemirror/state';
 import { indentOnInput, syntaxHighlighting, defaultHighlightStyle, bracketMatching } from '@codemirror/language';
-import { history, defaultKeymap, historyKeymap, insertTab, selectAll } from '@codemirror/commands';
+import { history, defaultKeymap, historyKeymap, insertTab, indentLess, selectAll } from '@codemirror/commands';
 import { highlightSelectionMatches, searchKeymap, openSearchPanel, searchPanelOpen } from '@codemirror/search';
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { css } from '@codemirror/lang-css';
@@ -15,6 +15,7 @@ import { compactSearchPanel } from './compact-search.mjs';
 import { createEditorSettings, normalizeSettings } from './editor-settings.mjs';
 import { detectLanguage } from './language-detection.mjs';
 import { themes, themeLabels } from './themes.js';
+import { lineNumberGutter } from './line-select.mjs';
 import { hideTargetUntilDialogCloses, scheduleEditorSetup } from './deferred-setup.mjs';
 import './style.css';
 
@@ -98,6 +99,8 @@ function setupCodeMirror(target) {
 
     const host = document.createElement('div');
     host.classList.add('codemirror-host');
+    // 열기 애니메이션을 기다리지 않도록 이 편집기 팝업만 애니메이션을 끈다.
+    target.closest('dialog')?.classList.replace('popup--animation-fast', 'popup--animation-none');
     target.classList.add('displayNone');
     parent.appendChild(host);
     const source = document.getElementById(target.dataset.for);
@@ -133,14 +136,20 @@ function setupCodeMirror(target) {
     const languageUpdate = debounce(updateLanguage, 300);
     host.dataset.language = currentLanguage;
     host.classList.toggle('codecode-plain-text-mode', languageChoice === 'text');
+    // 본체처럼 확장 버튼에 data-tab이 있거나 코드 모드일 때만 Tab으로 탭을 넣는다. 그 밖에는 Tab이 다음 버튼으로 포커스를 옮긴다.
+    const tabAllowed = () => Boolean(document.querySelector(`.editor_maximize[data-for="${CSS.escape(target.dataset.for ?? '')}"][data-tab]`))
+        || ['css', 'javascript', 'java'].includes(currentLanguage);
     const editor = new EditorView({
         doc: target.value,
         extensions: [
             themeCompartment.of(themes[settings.theme]),
             languageCompartment.of(languageExtensions[currentLanguage]),
-            lineNumbersCompartment.of(settings.lineNumbers ? lineNumbers() : []),
+            lineNumbersCompartment.of(settings.lineNumbers ? lineNumberGutter() : []),
             highlightActiveLineGutter(),
             highlightSpecialChars(),
+            // 검색의 '전체'처럼 여러 곳을 한 번에 선택하려면 다중 선택과 선택 그리기가 필요하다.
+            EditorState.allowMultipleSelections.of(true),
+            drawSelection(),
             history(),
             dropCursor(),
             EditorState.phrases.of(searchPhrases),
@@ -149,6 +158,10 @@ function setupCodeMirror(target) {
             bracketMatching(),
             closeBrackets(),
             highlightActiveLine(),
+            // 선택이 있을 때는 현재 줄 배경을 꺼서, 선택이 끝난 다음 줄까지 선택된 것처럼 보이지 않게 한다.
+            EditorView.editorAttributes.compute(['selection'], (state) => (
+                state.selection.main.empty ? {} : { class: 'codecode-has-selection' }
+            )),
             EditorView.lineWrapping,
             highlightSelectionMatches(),
             keymap.of([
@@ -156,7 +169,8 @@ function setupCodeMirror(target) {
                 ...defaultKeymap,
                 ...searchKeymap,
                 ...historyKeymap,
-                { key: 'Tab', run: insertTab },
+                { key: 'Tab', run: (view) => tabAllowed() && insertTab(view) },
+                { key: 'Shift-Tab', run: (view) => tabAllowed() && indentLess(view) },
             ]),
             EditorView.updateListener.of((update) => {
                 if (update.docChanged) {
@@ -177,7 +191,8 @@ function setupCodeMirror(target) {
             head: editor.state.doc.length,
         },
     });
-    editor.focus();
+    // 모바일에서 바로 포커스하면 키보드가 올라오며 화면 전체를 다시 그려 열기가 느려진다. 누른 곳에서 편집을 시작한다.
+    if (!(isMobile() || window.matchMedia('(max-width: 600px)').matches)) editor.focus();
 
     addMobileSearchButton(host, editor);
     const container = target.closest('dialog')?.querySelector('.popup-controls') ?? host;
@@ -188,7 +203,7 @@ function setupCodeMirror(target) {
             Object.assign(settings, patch);
             const effects = [];
             if ('theme' in patch) effects.push(themeCompartment.reconfigure(themes[settings.theme]));
-            if ('lineNumbers' in patch) effects.push(lineNumbersCompartment.reconfigure(settings.lineNumbers ? lineNumbers() : []));
+            if ('lineNumbers' in patch) effects.push(lineNumbersCompartment.reconfigure(settings.lineNumbers ? lineNumberGutter() : []));
             editor.dispatch({ effects });
             extensionSettings.codecode = { ...settings };
             saveSettingsDebounced();

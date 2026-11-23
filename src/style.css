@@ -134,8 +134,10 @@ dialog.popup .popup-controls > :is(.cm-search-button, .codecode-settings-button,
     align-items: center;
     gap: 3px;
     min-height: 36px;
+    min-width: 0;
     margin: 0;
     line-height: 1.2;
+    white-space: normal;
 }
 .codemirror-host.has-mobile-search-button .cm-editor .cm-panel.cm-search > .codecode-replace-toggle { grid-column: 1 / -1; }
 .codemirror-host.has-mobile-search-button .cm-editor .cm-panel.cm-search > .cm-button {
@@ -160,4 +162,13 @@ dialog.popup .popup-controls > :is(.cm-search-button, .codecode-settings-button,
     font-size: 1.4rem;
     line-height: 1;
     touch-action: manipulation;
+}
+
+/* 줄 번호 칸은 끌어서 줄을 선택하는 곳이라, 모바일에서 이 칸을 쓸어도 스크롤되지 않는다. */
+.codemirror-host .cm-lineNumbers {
+    cursor: pointer;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
 }

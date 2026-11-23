@@ -27,9 +27,12 @@ function createTheme(p) {
         '&': { color: p.fg, backgroundColor: p.bg },
         '.cm-content': { caretColor: p.fg },
         '.cm-cursor, .cm-dropCursor': { borderLeftColor: p.fg },
-        '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': { backgroundColor: p.selection },
+        // drawSelection이 그리는 선택 배경도 테마 색을 쓰도록, 기본 테마의 포커스 선택자와 같은 형태로 지정한다.
+        '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, &.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': { backgroundColor: p.selection },
         '.cm-gutters': { color: p.muted, backgroundColor: p.gutter, borderRight: 'none' },
         '.cm-activeLine, .cm-activeLineGutter': { backgroundColor: p.active },
+        '&.codecode-has-selection .cm-activeLine, &.codecode-has-selection .cm-activeLineGutter': { backgroundColor: 'transparent' },
+        '.cm-line.cm-codecode-lineSelect': { backgroundColor: p.selection },
         '.cm-panels': { color: p.fg, backgroundColor: p.bg },
         '.cm-textfield, .cm-button': { color: p.fg, backgroundColor: p.gutter, border: `1px solid ${p.muted}` },
         '.cm-searchMatch': { backgroundColor: p.selection, outline: `1px solid ${p.muted}` },
